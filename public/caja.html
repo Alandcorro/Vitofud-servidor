@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vito Fud — Caja</title>
+<link rel="stylesheet" href="/base.css">
+<style>
+html,body{min-height:100%}
+header{display:flex;align-items:center;gap:12px;padding:14px 22px;flex-wrap:wrap}
+header h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+#jchip{color:var(--muted);font-size:15px;font-weight:600}
+.sp{flex:1}
+#tema{background:var(--panel2);width:40px;height:40px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line);font-size:18px}
+#tabs{display:flex;gap:6px;padding:0 22px 14px;overflow-x:auto}
+#tabs button{flex:none;background:var(--panel);padding:11px 18px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:inset 0 0 0 1px var(--line)}
+#tabs button.on{background:var(--accent);color:var(--ink);box-shadow:none}
+#tabs i{font-style:normal;background:var(--bad);color:#fff;border-radius:99px;padding:1px 8px;margin-left:6px;font-size:14px}
+main{padding:0 22px 40px;max-width:1100px}
+#banner{margin:0 22px 14px;padding:14px 18px;border-radius:12px;background:var(--warn);color:#1b1300;font-weight:700;display:none;line-height:1.4}
+#banner.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.card{background:var(--panel);border-radius:18px;padding:16px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:8px}
+.card .top{display:flex;align-items:baseline;gap:10px}
+.card .top b.n{font-size:34px;color:var(--accent);letter-spacing:-.02em}
+.card .top span{color:var(--muted);font-size:15px}
+.card .top .mesa{font-weight:800;color:var(--text);font-size:17px}
+.card .li{font-size:17px;padding:2px 0}.card .li small{display:block;color:var(--accent);font-size:14px}
+.card .monto{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.card .acc{display:flex;gap:8px;margin-top:6px}.card .acc .btn{flex:1;padding:14px 10px}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;background:var(--panel2);color:var(--muted)}
+.chip.listo{background:var(--ok);color:#fff}.chip.prep{background:var(--warn);color:#1b1300}
+.vacio{color:var(--muted);padding:40px 0;text-align:center;font-size:18px}
+h2.s{font-size:20px;margin:22px 0 10px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:16px}
+th{color:var(--muted);font-weight:700;font-size:14px}
+td.d,th.d{text-align:right}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{background:var(--panel);border-radius:16px;padding:16px;box-shadow:inset 0 0 0 1px var(--line)}
+.kpi span{color:var(--muted);font-size:14px;display:block}.kpi b{font-size:28px;font-variant-numeric:tabular-nums}
+.fila{display:flex;align-items:center;gap:12px;background:var(--panel);border-radius:14px;padding:12px 16px;margin-bottom:8px;box-shadow:inset 0 0 0 1px var(--line)}
+.fila b{flex:1;font-size:17px}.fila span{color:var(--muted)}
+.form{display:flex;flex-direction:column;gap:12px;max-width:460px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+.form label small{color:var(--muted);font-weight:500}
+.form .chk{flex-direction:row;align-items:center;gap:10px}
+.form .chk input{width:22px;height:22px}
+.ok-msg{color:var(--ok);font-weight:700;min-height:20px}
+.barra-menu{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.barra-menu p{flex:1;min-width:220px;color:var(--muted);font-size:15px;line-height:1.4}
+.mini{flex:none;width:48px;height:48px;border-radius:10px;background-size:cover;background-position:center}
+.fila .btn{padding:10px 14px;font-size:15px;flex:none}
+.caja-dlg.edit{max-width:480px;max-height:92vh;overflow-y:auto}
+.caja-dlg.edit label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}.caja-dlg.edit label small{color:var(--muted);font-weight:500}
+.foto{display:flex;gap:12px;align-items:center}.foto .prev{flex:none;width:96px;height:96px;border-radius:14px;background-size:cover;background-position:center;background-color:var(--panel2)}.foto .fb{display:flex;flex-direction:column;gap:8px;flex:1}.foto .fb .btn{padding:11px 14px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:700;padding:12px 22px;border-radius:99px;display:none;z-index:60}
+</style>
+</head>
+<body>
+<header><h1 id="local">Caja</h1><span id="jchip"></span><span class="sp"></span>
+<button class="btn sec" id="bpausa" onclick="pausar()">Pausar pedidos</button>
+<a class="btn sec" href="/inicio" style="text-decoration:none">QR para imprimir</a>
+<button id="tema" aria-label="Cambiar tema" onclick="cambiarTema()">◐</button></header>
+<div id="banner" role="alert"></div>
+<nav id="tabs"></nav>
+<main id="vista"></main>
+<div id="toast"></div>
+<script src="/comun.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var TABS=[['cobrar','Por cobrar'],['curso','En curso'],['jornada','Jornada y ventas'],['menu','Menú'],['ajustes','Ajustes']];
+var tab='cobrar',PED=[],JOR=null,CFG={},ac=null,vistos=null,errRed=0;
+
+function toast(m){var t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display='none'},2600)}
+function activarSonido(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume()}
+document.addEventListener('click',activarSonido);
+function pitar(){if(!ac)return;try{var o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=.25;o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);o.stop(ac.currentTime+.5)}catch(e){}}
+function haceMin(ts){return Math.max(0,Math.floor((Date.now()-ts)/60000))}
+function items(p){return p.items.map(function(i){return'<div class="li"><b>'+i.q+'×</b> '+esc(i.n)+(i.nota?'<small>'+esc(i.nota)+'</small>':'')+'</div>'}).join('')}
+
+/* ---------- arranque: PIN ---------- */
+function setup(){
+  var v=document.createElement('div');v.className='velo';
+  v.innerHTML='<form class="caja-dlg" autocomplete="off"><h2>Elegí el PIN del local</h2><p>Lo van a usar caja y cocina para entrar. Tiene que ser de 4 a 8 números. Anotalo en un lugar seguro.</p><input type="password" inputmode="numeric" maxlength="8" id="p1" placeholder="PIN" aria-label="PIN"><input type="password" inputmode="numeric" maxlength="8" id="p2" placeholder="Repetí el PIN" aria-label="Repetir PIN"><div class="err" id="e" role="alert"></div><button class="btn" type="submit">Guardar PIN</button></form>';
+  document.body.appendChild(v);
+  v.querySelector('form').onsubmit=function(ev){
+    ev.preventDefault();var e=v.querySelector('#e'),a=v.querySelector('#p1').value,b=v.querySelector('#p2').value;
+    if(a!==b){e.textContent='Los dos PIN no coinciden.';return}
+    fetch('/api/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:a})}).then(function(r){return r.json()}).then(function(d){
+      if(d.ok){VF.guardar(d.token);document.body.removeChild(v);iniciar()}else e.textContent=d.error||'No se pudo guardar el PIN.';
+    }).catch(function(){e.textContent='No hay conexión con el servidor.'});
+  };
+}
+fetch('/api/config').then(function(r){return r.json()}).then(function(c){
+  CFG=c;
+  if(c.necesitaPin)setup();else if(!VF.token())VF.login(iniciar);else iniciar();
+});
+
+var iniciado=false;
+function iniciar(){
+  if(iniciado)return;iniciado=true;
+  $('local').textContent=CFG.local+' · Caja';
+  $('tabs').innerHTML=TABS.map(function(t){return'<button id="t-'+t[0]+'" onclick="ir(\''+t[0]+'\')">'+t[1]+'<i id="b-'+t[0]+'" hidden></i></button>'}).join('');
+  ir('cobrar');poll();setInterval(poll,2000);
+}
+function ir(t){
+  tab=t;TABS.forEach(function(x){$('t-'+x[0]).classList.toggle('on',x[0]===t)});
+  if(t==='cobrar'||t==='curso')dibujarPedidos();else if(t==='jornada')vistaJornada();else if(t==='menu')vistaMenu();else vistaAjustes();
+}
+
+/* ---------- pedidos ---------- */
+function poll(){
+  VF.api('/api/pedidos?activos=1').then(function(r){
+    errRed=0;if(!r.ok)return;
+    PED=r.data.pedidos;JOR=r.data.jornada;
+    var ids={},nuevo=false;
+    PED.forEach(function(p){ids[p.id]=1;if(vistos&&!vistos[p.id]&&p.estado==='porcobrar')nuevo=true});
+    vistos=vistos||{};PED.forEach(function(p){vistos[p.id]=1});
+    if(nuevo)pitar();
+    var pc=PED.filter(function(p){return p.estado==='porcobrar'}).length,ec=PED.length-pc;
+    setBadge('cobrar',pc);setBadge('curso',ec);
+    $('jchip').textContent=JOR?'Jornada '+JOR.ref+' · abierta hace '+(JOR.horas<1?Math.round(JOR.horas*60)+' min':JOR.horas+' h'):'Sin jornada abierta (se abre con el primer pedido)';
+    var b=$('banner');
+    if(JOR&&JOR.horas>16){b.textContent='La jornada abierta es de hace '+Math.round(JOR.horas)+' horas. Si ya cerró el local, cerrala en "Jornada y ventas" para que la numeración vuelva a #1.';b.classList.add('on')}else b.classList.remove('on');
+    if(tab==='cobrar'||tab==='curso')dibujarPedidos();
+  }).catch(function(){if(++errRed>2)$('jchip').textContent='Sin conexión con el servidor…'});
+  if(CFG.pausado===undefined)return;
+}
+function setBadge(t,n){var e=$('b-'+t);if(!e)return;e.hidden=!n;e.textContent=n}
+
+function dibujarPedidos(){
+  var lista=PED.filter(function(p){return tab==='cobrar'?p.estado==='porcobrar':p.estado!=='porcobrar'});
+  if(!lista.length){$('vista').innerHTML='<div class="vacio">'+(tab==='cobrar'?'No hay pedidos esperando cobro.':'No hay pedidos en curso.')+'</div>';return}
+  var h='<div class="grid">';
+  lista.forEach(function(p){
+    h+='<div class="card"><div class="top"><b class="n">#'+p.num+'</b><span class="mesa">'+esc(etiquetaMesa(p.mesa))+'</span><span class="sp"></span><span>hace '+haceMin(p.ts)+' min</span></div>'+items(p);
+    if(tab==='cobrar'){
+      h+='<div class="monto">'+dinero(p.total)+'</div><span class="chip">'+esc(p.pago||'Sin dato')+'</span><div class="acc"><button class="btn ok" onclick="cobrar(\''+p.id+'\',this)">Cobrado</button><button class="btn bad" onclick="cancelar(\''+p.id+'\','+p.num+')">Cancelar</button></div>';
+    }else{
+      var et={nuevo:'En cola',prep:'Preparando',listo:'Listo'}[p.estado];
+      h+='<div><span class="chip '+p.estado+'">'+et+'</span> <span class="chip">'+dinero(p.total)+'</span></div><div class="acc"><button class="btn bad" onclick="cancelar(\''+p.id+'\','+p.num+')">Cancelar pedido</button></div>';
+    }
+    h+='</div>';
+  });
+  $('vista').innerHTML=h+'</div>';
+}
+function cobrar(id,b){b.disabled=true;VF.api('/api/pedidos/'+encodeURIComponent(id)+'/cobrar',{method:'POST',body:{}}).then(function(r){if(!r.ok)toast(r.data.error||'No se pudo registrar el cobro');poll()}).catch(function(){toast('Sin conexión. Probá de nuevo.');b.disabled=false})}
+function cancelar(id,num){if(!confirm('¿Cancelar el pedido #'+num+'?'))return;VF.api('/api/pedidos/'+encodeURIComponent(id)+'/cancelar',{method:'POST',body:{}}).then(function(r){if(!r.ok)toast(r.data.error||'No se pudo cancelar');poll()}).catch(function(){toast('Sin conexión. Probá de nuevo.')})}
+
+function pausar(){
+  VF.api('/api/pausa',{method:'POST',body:{pausado:!CFG.pausado}}).then(function(r){if(r.ok){CFG.pausado=r.data.pausado;pintarPausa();toast(CFG.pausado?'Pedidos pausados':'Pedidos activados')}});
+}
+function pintarPausa(){var b=$('bpausa');b.textContent=CFG.pausado?'Reanudar pedidos':'Pausar pedidos';b.className=CFG.pausado?'btn':'btn sec'}
+setTimeout(function(){pintarPausa()},400);
+
+/* ---------- jornada y ventas ---------- */
+function tablaPlatos(pl){
+  if(!pl.length)return'<p class="vacio" style="padding:14px 0">Todavía no hay ventas.</p>';
+  return'<table><tr><th>Plato</th><th class="d">Vendidos</th><th class="d">Total</th></tr>'+pl.map(function(x){return'<tr><td>'+esc(x.n)+'</td><td class="d">'+x.q+'</td><td class="d">'+dinero(x.total)+'</td></tr>'}).join('')+'</table>';
+}
+function vistaJornada(){
+  $('vista').innerHTML='<div class="vacio">Cargando…</div>';
+  VF.api('/api/jornada').then(function(r){
+    if(!r.ok)return;var d=r.data,s=d.resumen;
+    var h='<div class="kpis"><div class="kpi"><span>Jornada</span><b>'+(d.actual?d.actual.ref:'—')+'</b></div><div class="kpi"><span>Pedidos cobrados</span><b>'+s.pedidos+'</b></div><div class="kpi"><span>Vendido</span><b>'+dinero(s.total)+'</b></div><div class="kpi"><span>Cancelados</span><b>'+s.cancelados+'</b></div></div>';
+    var pagos=Object.keys(s.porPago);
+    if(pagos.length)h+='<p style="margin-top:12px;color:var(--muted)">'+pagos.map(function(k){return esc(k)+': <b style="color:var(--text)">'+dinero(s.porPago[k])+'</b>'}).join(' · ')+'</p>';
+    h+='<h2 class="s">Por plato (jornada actual)</h2>'+tablaPlatos(s.platos);
+    h+='<div style="margin:18px 0"><button class="btn bad" '+(d.actual?'':'disabled')+' onclick="cerrarJornada()">Cerrar jornada</button><p style="color:var(--muted);margin-top:8px;font-size:15px">Al cerrar, se guarda el resumen en el historial y la numeración vuelve a #1.</p></div>';
+    h+='<h2 class="s">Ventas del mes</h2><div id="rep"></div>';
+    $('vista').innerHTML=h;cargarReporte();
+  });
+}
+function cargarReporte(mes){
+  VF.api('/api/reporte'+(mes?'?mes='+mes:'')).then(function(r){
+    if(!r.ok)return;var d=r.data;
+    var h='<select id="mes" onchange="cargarReporte(this.value)" style="max-width:220px;margin-bottom:12px">'+d.meses.map(function(m){return'<option'+(m===d.mes?' selected':'')+'>'+m+'</option>'}).join('')+'</select>';
+    h+='<div class="kpis"><div class="kpi"><span>Facturación del mes</span><b>'+dinero(d.total)+'</b></div><div class="kpi"><span>Pedidos</span><b>'+d.pedidos+'</b></div></div>';
+    h+='<h2 class="s">Por jornada</h2>';
+    h+=d.jornadas.length?'<table><tr><th>Fecha</th><th>Jornada</th><th class="d">Pedidos</th><th class="d">Total</th></tr>'+d.jornadas.map(function(j){return'<tr><td>'+j.fecha+'</td><td>'+j.ref+(j.enCurso?' (en curso)':'')+'</td><td class="d">'+j.pedidos+'</td><td class="d">'+dinero(j.total)+'</td></tr>'}).join('')+'</table>':'<p class="vacio" style="padding:14px 0">No hay jornadas en este mes.</p>';
+    h+='<h2 class="s">Por plato en el mes</h2>'+tablaPlatos(d.platos);
+    $('rep').innerHTML=h;
+  });
+}
+function cerrarJornada(forzar){
+  if(!forzar&&!confirm('¿Cerrar la jornada? La numeración vuelve a #1.'))return;
+  VF.api('/api/jornada/cerrar',{method:'POST',body:{forzar:!!forzar}}).then(function(r){
+    if(r.status===409&&r.data.error==='pendientes'){if(confirm('Hay '+r.data.pendientes+' pedido(s) sin entregar. ¿Cerrar igual y marcarlos como entregados?'))cerrarJornada(true);return}
+    if(!r.ok){toast(r.data.error||'No se pudo cerrar');return}
+    toast('Jornada '+r.data.ref+' cerrada: '+dinero(r.data.resumen.total));poll();vistaJornada();
+  });
+}
+
+/* ---------- menú ---------- */
+var MENU=[],FOTO;
+function vistaMenu(){fetch('/api/menu').then(function(r){return r.json()}).then(function(d){MENU=d.menu;dibujarMenu()})}
+function fondoDe(i){return i.img?'background-image:url('+i.img+')':'background:linear-gradient(135deg,'+(i.c?i.c[0]:'#444')+','+(i.c?i.c[1]:'#111')+')'}
+function categorias(){var c=[];MENU.forEach(function(i){if(c.indexOf(i.cat)<0)c.push(i.cat)});return c}
+function dibujarMenu(){
+  var h='<div class="barra-menu"><button class="btn" onclick="editar()">+ Agregar producto</button><p>Tocá "Editar" para cambiar el precio, la descripción, las opciones o la foto. "Marcar agotado" lo saca de la carta al instante.</p></div>';
+  if(!MENU.length)h+='<div class="vacio">Todavía no hay productos. Agregá el primero.</div>';
+  categorias().forEach(function(c){
+    h+='<h2 class="s">'+esc(c)+'</h2>';
+    MENU.filter(function(i){return i.cat===c}).forEach(function(i){
+      h+='<div class="fila"><div class="mini" style="'+fondoDe(i)+'"></div><b>'+esc(i.n)+(i.agotado?' <span class="chip">Agotado</span>':'')+'</b><span>'+dinero(i.p)+'</span><button class="btn sec" onclick="editar('+i.id+')">Editar</button><button class="btn '+(i.agotado?'':'sec')+'" onclick="agotar('+i.id+','+(!i.agotado)+')">'+(i.agotado?'Volver a activar':'Marcar agotado')+'</button></div>';
+    });
+  });
+  $('vista').innerHTML=h;
+}
+function agotar(id,v){VF.api('/api/menu/agotado',{method:'POST',body:{id:id,agotado:v}}).then(function(r){if(r.ok)vistaMenu();else toast('No se pudo guardar')})}
+
+function editar(id){
+  var i=id?MENU.filter(function(m){return m.id===id})[0]:{n:'',cat:'',d:'',p:'',x:[]};
+  FOTO=undefined;
+  var v=document.createElement('div');v.className='velo';
+  v.innerHTML='<form class="caja-dlg edit" autocomplete="off"><h2>'+(id?'Editar producto':'Nuevo producto')+'</h2>'+
+   '<label>Nombre<input type="text" id="e-n" maxlength="60" value="'+esc(i.n)+'"></label>'+
+   '<label>Categoría<input type="text" id="e-cat" maxlength="30" list="e-cats" value="'+esc(i.cat)+'" placeholder="Ej: Parrilla, Bebidas…"><datalist id="e-cats">'+categorias().map(function(c){return'<option value="'+esc(c)+'">'}).join('')+'</datalist></label>'+
+   '<label>Precio<input type="number" id="e-p" min="0" step="1" inputmode="numeric" value="'+(i.p===''?'':i.p)+'"></label>'+
+   '<label>Descripción (opcional)<input type="text" id="e-d" maxlength="140" value="'+esc(i.d||'')+'"></label>'+
+   '<label>Opciones "sin…" (opcional)<input type="text" id="e-x" value="'+esc((i.x||[]).join(', '))+'" placeholder="Ej: Cebolla, Tomate, Mayonesa"><small>Separadas por coma. El cliente puede tocar "Sin cebolla", etc.</small></label>'+
+   '<div class="foto"><div class="prev" id="e-prev" style="'+fondoDe(i)+'"></div><div class="fb"><label class="btn sec" style="text-align:center;cursor:pointer">Elegir foto<input type="file" id="e-f" accept="image/*" hidden></label><button type="button" class="btn sec" id="e-q"'+(i.img?'':' hidden')+'>Quitar foto</button></div></div>'+
+   '<div class="err" id="e-err" role="alert"></div>'+
+   '<button class="btn" type="submit" id="e-ok">Guardar</button>'+
+   '<button class="btn sec" type="button" id="e-cancel">Cancelar</button>'+
+   (id?'<button class="btn bad" type="button" id="e-del">Borrar producto</button>':'');
+  document.body.appendChild(v);
+  var $e=function(x){return v.querySelector('#'+x)};
+  function cerrar(){document.body.removeChild(v)}
+  setTimeout(function(){$e('e-n').focus()},50);
+  $e('e-cancel').onclick=cerrar;
+  $e('e-f').onchange=function(){
+    var f=this.files[0];if(!f)return;
+    achicar(f,function(url){
+      if(!url){$e('e-err').textContent='No se pudo leer esa imagen. Probá con otra.';return}
+      FOTO=url;$e('e-prev').style.cssText='background-image:url('+url+')';$e('e-q').hidden=false;$e('e-err').textContent='';
+    });
+  };
+  $e('e-q').onclick=function(){FOTO=null;$e('e-prev').style.cssText=fondoDe({c:i.c});$e('e-q').hidden=true};
+  if(id)$e('e-del').onclick=function(){
+    if(!confirm('¿Borrar "'+i.n+'"? Los pedidos ya hechos no se tocan.'))return;
+    VF.api('/api/menu/borrar',{method:'POST',body:{id:id}}).then(function(r){if(r.ok){cerrar();toast('Producto borrado');vistaMenu()}else $e('e-err').textContent=r.data.error||'No se pudo borrar'});
+  };
+  v.querySelector('form').onsubmit=function(ev){
+    ev.preventDefault();$e('e-err').textContent='';
+    var pv=$e('e-p').value;
+    if(pv===''||isNaN(+pv)){$e('e-err').textContent='Poné el precio.';return}
+    var cuerpo={n:$e('e-n').value,cat:$e('e-cat').value,p:Math.round(+pv),d:$e('e-d').value,x:$e('e-x').value.split(',')};
+    if(id)cuerpo.id=id;
+    $e('e-ok').disabled=true;
+    VF.api('/api/menu/guardar',{method:'POST',body:cuerpo}).then(function(r){
+      if(!r.ok){$e('e-ok').disabled=false;$e('e-err').textContent=r.data.error||'No se pudo guardar';return}
+      var nid=r.data.id;
+      if(FOTO===undefined){cerrar();toast('Guardado');vistaMenu();return}
+      VF.api('/api/menu/imagen',{method:'POST',body:{id:nid,data:FOTO},ms:15000}).then(function(r2){
+        cerrar();vistaMenu();toast(r2.ok?'Guardado':'El producto se guardó, pero la foto no se pudo subir: '+(r2.data.error||''));
+      }).catch(function(){cerrar();vistaMenu();toast('El producto se guardó, pero la foto no se pudo subir.')});
+    }).catch(function(){$e('e-ok').disabled=false;$e('e-err').textContent='Sin conexión con el servidor. Probá de nuevo.'});
+  };
+}
+/* achica la foto en el navegador (máx. 900 px) para que pese poco */
+function achicar(file,cb){
+  var img=new Image(),u=URL.createObjectURL(file);
+  img.onload=function(){
+    var lado=900,k=Math.min(1,lado/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+    var q=.82,url=c.toDataURL('image/jpeg',q);
+    while(url.length>700000&&q>.4){q-=.12;url=c.toDataURL('image/jpeg',q)}
+    URL.revokeObjectURL(u);cb(url.length>780000?null:url);
+  };
+  img.onerror=function(){URL.revokeObjectURL(u);cb(null)};
+  img.src=u;
+}
+
+/* ---------- ajustes ---------- */
+function vistaAjustes(){
+  fetch('/api/config').then(function(r){return r.json()}).then(function(c){
+    CFG=c;pintarPausa();
+    $('vista').innerHTML='<form class="form" onsubmit="guardarAjustes(event)"><h2 class="s" style="margin:0">Local</h2>'+
+    '<label>Nombre del local<input type="text" id="a-local" maxlength="60" value="'+esc(c.local)+'"></label>'+
+    '<label>Cantidad de mesas<input type="number" id="a-mesas" min="0" max="99" value="'+c.mesas+'"><small>Define cuántos QR de mesa se generan en "QR para imprimir".</small></label>'+
+    '<label class="chk"><input type="checkbox" id="a-conf"'+(c.confirmarPago?' checked':'')+'> Caja confirma el pago antes de que el pedido pase a cocina</label>'+
+    '<label>Alias para transferencias (opcional)<input type="text" id="a-alias" maxlength="80" value="'+esc(c.aliasPago)+'"></label>'+
+    '<p style="color:var(--muted);font-size:15px;line-height:1.4">QR de cobro: copiá la imagen del QR de tu cuenta a la carpeta <b>datos</b> con el nombre <b>qr-pago.png</b> (o .jpg). '+(c.hayQrPago?'<b style="color:var(--ok)">Ya hay un QR cargado.</b>':'<b style="color:var(--warn)">Todavía no hay ningún QR cargado.</b>')+'</p>'+
+    '<button class="btn" type="submit">Guardar cambios</button><div class="ok-msg" id="a-ok"></div></form>'+
+    '<form class="form" style="margin-top:28px" onsubmit="cambiarPin(event)"><h2 class="s" style="margin:0">Cambiar PIN</h2><label>PIN actual<input type="password" inputmode="numeric" id="p-act" maxlength="8"></label><label>PIN nuevo<input type="password" inputmode="numeric" id="p-new" maxlength="8"></label><div class="err" id="p-err" role="alert"></div><button class="btn sec" type="submit">Cambiar PIN</button></form>';
+  });
+}
+function guardarAjustes(e){
+  e.preventDefault();
+  VF.api('/api/config',{method:'POST',body:{local:$('a-local').value,mesas:+$('a-mesas').value,confirmarPago:$('a-conf').checked,aliasPago:$('a-alias').value}}).then(function(r){
+    $('a-ok').textContent=r.ok?'Guardado.':(r.data.error||'No se pudo guardar');
+    if(r.ok){CFG.local=$('a-local').value;$('local').textContent=CFG.local+' · Caja'}
+  });
+}
+function cambiarPin(e){
+  e.preventDefault();
+  VF.api('/api/pin',{method:'POST',body:{actual:$('p-act').value,nuevo:$('p-new').value}}).then(function(r){
+    if(r.ok){VF.guardar(r.data.token);$('p-err').style.color='var(--ok)';$('p-err').textContent='PIN cambiado. Cocina y otras tablets van a pedir el PIN nuevo.';$('p-act').value=$('p-new').value=''}
+    else{$('p-err').style.color='';$('p-err').textContent=r.data.error||'No se pudo cambiar'}
+  });
+}
+</script>
+</body>
+</html>

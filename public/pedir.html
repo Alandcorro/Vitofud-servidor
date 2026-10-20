@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hacer pedido</title>
+<link rel="stylesheet" href="/base.css">
+<style>
+body{min-height:100vh}
+header{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 18px 10px;display:flex;align-items:center;gap:12px}
+header h1{font-size:24px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mesa{background:var(--accent);color:var(--ink);font-weight:800;padding:7px 14px;border-radius:99px;font-size:15px;white-space:nowrap}
+#tema{background:var(--panel2);width:40px;height:40px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line);font-size:18px}
+#cats{position:sticky;top:64px;z-index:19;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:4px 18px 12px;scrollbar-width:none}
+#cats::-webkit-scrollbar{display:none}
+#cats a{flex:none;text-decoration:none;color:var(--text);background:var(--panel);padding:9px 16px;border-radius:99px;font-weight:700;font-size:15px;box-shadow:inset 0 0 0 1px var(--line)}
+.app{display:grid;grid-template-columns:1fr;max-width:1200px;margin:0 auto}
+main{padding:0 18px 110px}
+h2.cat{font-size:20px;margin:18px 0 10px;scroll-margin-top:120px}
+.it{display:flex;gap:14px;align-items:center;background:var(--panel);border-radius:18px;padding:12px;margin-bottom:10px;box-shadow:inset 0 0 0 1px var(--line)}
+.it.ag{opacity:.55}
+.th{flex:none;width:76px;height:76px;border-radius:14px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:rgba(255,255,255,.55)}
+.in{flex:1;min-width:0}
+.in b{display:block;font-size:18px}
+.in span{display:block;color:var(--muted);font-size:14px;margin:2px 0 6px;line-height:1.3}
+.in em{font-style:normal;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.ctl{flex:none}
+.add{background:var(--accent);color:var(--ink);font-weight:800;width:44px;height:44px;border-radius:50%;font-size:26px;line-height:1}
+.step{display:flex;align-items:center;gap:6px;background:var(--panel2);border-radius:99px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.step button{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:800;font-size:22px;line-height:1}
+.step button.menos{background:var(--panel);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.step b{min-width:22px;text-align:center;font-size:18px}
+.agt{color:var(--bad);font-weight:800;font-size:14px}
+#barra{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 35%);display:none}
+#barra.on{display:block}
+#barra button{width:100%;display:flex;justify-content:space-between;padding:16px 22px;font-size:18px}
+#hoja{position:fixed;inset:auto 0 0 0;z-index:40;max-height:88vh;background:var(--panel);border-radius:24px 24px 0 0;display:none;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.45)}
+#hoja.on{display:flex}
+#velo-hoja{position:fixed;inset:0;z-index:35;background:rgba(3,6,18,.6);display:none}
+#velo-hoja.on{display:block}
+.hh{display:flex;align-items:center;padding:18px 20px 8px}
+.hh h2{flex:1;font-size:22px}
+.hh button{background:var(--panel2);width:38px;height:38px;border-radius:50%;font-size:18px}
+.hc{overflow-y:auto;padding:4px 20px 12px;flex:1}
+.ln{padding:12px 0;border-bottom:1px solid var(--line)}
+.ln .r{display:flex;align-items:center;gap:10px}
+.ln .r b{flex:1;font-size:17px}
+.ln .p{font-variant-numeric:tabular-nums;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{background:var(--panel2);padding:7px 12px;border-radius:99px;font-size:14px;font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.chips button.on{background:var(--accent);color:var(--ink);box-shadow:none}
+.ln input{margin-top:8px;font-size:15px;padding:9px 12px}
+.pago{display:flex;gap:8px;margin:14px 0 4px}
+.pago label{flex:1;background:var(--panel2);border-radius:12px;padding:12px;text-align:center;font-weight:700;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line)}
+.pago input{display:none}
+.pago input:checked+span{color:var(--accent)}
+.pago label:has(input:checked){box-shadow:inset 0 0 0 3px var(--accent)}
+.hf{padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.tot{display:flex;justify-content:space-between;font-size:22px;font-weight:800;margin-bottom:12px;font-variant-numeric:tabular-nums}
+#aviso{position:fixed;left:16px;right:16px;top:76px;z-index:60;background:var(--bad);color:#fff;font-weight:700;padding:14px 18px;border-radius:14px;display:none;line-height:1.35}
+#aviso.on{display:block}
+#pausa{background:var(--warn);color:#1b1300;font-weight:700;padding:12px 18px;margin:0 18px 6px;border-radius:12px;display:none}
+#pausa.on{display:block}
+#estado{position:fixed;inset:0;z-index:70;background:var(--bg);display:none;overflow-y:auto}
+#estado.on{display:block}
+.e{max-width:520px;margin:0 auto;padding:36px 22px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.e .num{font-size:clamp(84px,26vw,150px);font-weight:900;line-height:1;color:var(--accent);letter-spacing:-.04em}
+.e h2{font-size:26px}
+.e p{color:var(--muted);font-size:17px;line-height:1.45}
+.e .caja{background:var(--panel);border-radius:20px;padding:20px;width:100%;box-shadow:inset 0 0 0 1px var(--line)}
+.e .caja img{width:min(260px,70%);border-radius:12px;background:#fff;margin:12px 0 4px}
+.e .monto{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
+.e .alias{font-weight:800;font-size:19px;user-select:all}
+.e.listo .num{color:var(--ok)}
+@media (min-width:900px){
+  .app{grid-template-columns:1fr 400px;gap:20px;padding:0 18px}
+  main{padding:0 0 40px}
+  #barra,#barra.on{display:none}
+  #hoja{position:sticky;top:76px;inset:auto;align-self:start;display:flex;max-height:calc(100vh - 100px);border-radius:22px;box-shadow:inset 0 0 0 1px var(--line);margin-bottom:20px}
+  #hoja .hh button{display:none}
+  #velo-hoja,#velo-hoja.on{display:none}
+  #cats{top:64px;padding-left:18px}
+}
+</style>
+</head>
+<body>
+<header><h1 id="local">Vito Fud</h1><span class="mesa" id="mesa"></span><button id="tema" aria-label="Cambiar entre tema claro y oscuro" onclick="cambiarTema()">◐</button></header>
+<div id="pausa" role="status"></div>
+<nav id="cats" aria-label="Categorías"></nav>
+<div id="aviso" role="alert"></div>
+<div class="app">
+  <main id="lista"><p style="color:var(--muted);padding:30px 0">Cargando la carta…</p></main>
+  <aside id="hoja" aria-label="Tu pedido">
+    <div class="hh"><h2>Tu pedido</h2><button onclick="hoja(false)" aria-label="Cerrar">✕</button></div>
+    <div class="hc" id="hc"></div>
+    <div class="hf"><div class="tot"><span>Total</span><span id="total">$0</span></div><button class="btn" id="enviar" style="width:100%" onclick="enviar()">Enviar pedido</button></div>
+  </aside>
+</div>
+<div id="velo-hoja" onclick="hoja(false)"></div>
+<div id="barra"><button class="btn" onclick="hoja(true)"><span id="bn">Ver pedido</span><span id="bt"></span></button></div>
+<div id="estado" aria-live="polite"></div>
+<script src="/comun.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var CFG={},MENU=[],CART={},ID_INTENTO=null,PAGO='QR',enviando=false,errPoll=0,timer=null;
+var params=new URLSearchParams(location.search),pm=params.get('mesa');
+var MESA=pm==='llevar'?'llevar':(/^\d{1,3}$/.test(pm||'')?+pm:null);
+$('mesa').textContent=etiquetaMesa(MESA);
+
+function nuevoId(){var a=new Uint8Array(16);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return('0'+b.toString(16)).slice(-2)}).join('')}
+function get(url){return fetch(url,{cache:'no-store'}).then(function(r){return r.json().then(function(d){return{ok:r.ok,status:r.status,data:d}})})}
+function aviso(t){var a=$('aviso');a.textContent=t;a.classList.add('on');clearTimeout(aviso.t);aviso.t=setTimeout(function(){a.classList.remove('on')},6000)}
+function total(){var t=0;MENU.forEach(function(i){if(CART[i.id])t+=i.p*CART[i.id].q});return t}
+function cantidad(){var n=0;Object.keys(CART).forEach(function(k){n+=CART[k].q});return n}
+
+function cargar(){
+  return Promise.all([get('/api/config'),get('/api/menu')]).then(function(r){
+    CFG=r[0].data;MENU=r[1].data.menu;
+    $('local').textContent=CFG.local;document.title=CFG.local+' - Pedidos';
+    if(!CFG.confirmarPago)PAGO='CAJA';
+    var p=$('pausa');p.textContent='El local pausó los pedidos por un momento. Avisale al mozo.';p.classList.toggle('on',!!CFG.pausado);
+    dibujarMenu();dibujarHoja();
+  }).catch(function(){$('lista').innerHTML='<p style="padding:30px 0;color:var(--bad);font-weight:700">No se pudo cargar la carta. Revisá que estés conectado al wifi del local.</p>'});
+}
+
+function dibujarMenu(){
+  var cats=[],h='';
+  MENU.forEach(function(i){if(cats.indexOf(i.cat)<0)cats.push(i.cat)});
+  $('cats').innerHTML=cats.map(function(c,k){return'<a href="#cat'+k+'">'+esc(c)+'</a>'}).join('');
+  cats.forEach(function(c,k){
+    h+='<h2 class="cat" id="cat'+k+'">'+esc(c)+'</h2>';
+    MENU.filter(function(i){return i.cat===c}).forEach(function(i){
+      var fondo=i.img?'background-image:url('+i.img+')':'background:linear-gradient(135deg,'+(i.c?i.c[0]:'#444')+','+(i.c?i.c[1]:'#111')+')';
+      var q=CART[i.id]?CART[i.id].q:0,ctl;
+      if(i.agotado)ctl='<span class="agt">Agotado</span>';
+      else if(!q)ctl='<button class="add" onclick="cambiar('+i.id+',1)" aria-label="Agregar '+esc(i.n)+'">+</button>';
+      else ctl='<div class="step"><button class="menos" onclick="cambiar('+i.id+',-1)" aria-label="Sacar uno">−</button><b>'+q+'</b><button onclick="cambiar('+i.id+',1)" aria-label="Agregar otro">+</button></div>';
+      h+='<div class="it'+(i.agotado?' ag':'')+'"><div class="th" style="'+fondo+'">'+(i.img?'':esc(i.n.charAt(0)))+'</div><div class="in"><b>'+esc(i.n)+'</b><span>'+esc(i.d||'')+'</span><em>'+dinero(i.p)+'</em></div><div class="ctl">'+ctl+'</div></div>';
+    });
+  });
+  $('lista').innerHTML=h;
+}
+
+function cambiar(id,d){
+  var c=CART[id]||(CART[id]={q:0,sin:{},txt:''});
+  c.q=Math.max(0,Math.min(99,c.q+d));
+  if(!c.q)delete CART[id];
+  dibujarMenu();dibujarHoja();
+}
+
+function dibujarHoja(){
+  var n=cantidad(),h='';
+  $('barra').classList.toggle('on',n>0);
+  $('bn').textContent='Ver pedido ('+n+')';$('bt').textContent=dinero(total());
+  $('total').textContent=dinero(total());
+  if(!n){h='<p style="color:var(--muted);padding:20px 0">Todavía no agregaste nada. Elegí platos de la carta.</p>';hoja(false,true)}
+  MENU.forEach(function(i){
+    var c=CART[i.id];if(!c)return;
+    h+='<div class="ln"><div class="r"><b>'+esc(i.n)+'</b><div class="step"><button class="menos" onclick="cambiar('+i.id+',-1)" aria-label="Sacar uno">−</button><b>'+c.q+'</b><button onclick="cambiar('+i.id+',1)" aria-label="Agregar otro">+</button></div><span class="p">'+dinero(i.p*c.q)+'</span></div>';
+    if(i.x&&i.x.length)h+='<div class="chips">'+i.x.map(function(x){return'<button class="'+(c.sin[x]?'on':'')+'" onclick="sin('+i.id+',\''+esc(x).replace(/'/g,'')+'\')">Sin '+esc(x.toLowerCase())+'</button>'}).join('')+'</div>';
+    h+='<input type="text" maxlength="100" placeholder="Aclaración (opcional)" value="'+esc(c.txt)+'" oninput="CART['+i.id+'].txt=this.value"></div>';
+  });
+  if(n&&CFG.confirmarPago){
+    h+='<div class="pago"><label><input type="radio" name="pg" value="QR"'+(PAGO==='QR'?' checked':'')+' onchange="PAGO=this.value"><span>Pagar con QR</span></label><label><input type="radio" name="pg" value="CAJA"'+(PAGO==='CAJA'?' checked':'')+' onchange="PAGO=this.value"><span>Pagar en caja</span></label></div>';
+  }
+  $('hc').innerHTML=h;
+  $('enviar').disabled=!n||enviando;
+}
+function sin(id,x){
+  var i=MENU.filter(function(m){return m.id===id})[0],real=i.x.filter(function(y){return y.replace(/'/g,'')===x})[0]||x;
+  var c=CART[id];c.sin[real]=!c.sin[real];dibujarHoja();
+}
+function hoja(abrir,silencio){
+  $('hoja').classList.toggle('on',abrir);$('velo-hoja').classList.toggle('on',abrir);
+  if(abrir&&!ID_INTENTO)ID_INTENTO=nuevoId();
+}
+
+function enviar(){
+  if(enviando||!cantidad())return;
+  enviando=true;dibujarHoja();$('enviar').textContent='Enviando…';
+  var items=[];
+  MENU.forEach(function(i){
+    var c=CART[i.id];if(!c)return;
+    var partes=Object.keys(c.sin).filter(function(k){return c.sin[k]}).map(function(k){return'sin '+k});
+    if(c.txt.trim())partes.push(c.txt.trim());
+    items.push({n:i.n,q:c.q,nota:partes.join(', ').slice(0,200)});
+  });
+  var pago=!CFG.confirmarPago?'Pagás en caja':(PAGO==='QR'?'QR':'Pagás en caja');
+  fetch('/api/pedidos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:ID_INTENTO,items:items,pago:pago,mesa:MESA})})
+    .then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+    .then(function(r){
+      enviando=false;$('enviar').textContent='Enviar pedido';
+      if(r.status===200||r.status===201){
+        try{localStorage.setItem('vf_pedido',JSON.stringify({id:r.data.pedido.id,pago:pago}))}catch(e){}
+        CART={};ID_INTENTO=null;hoja(false);dibujarMenu();dibujarHoja();seguir();
+      }else if(r.status===409&&r.data.error==='agotado'){aviso(r.data.mensaje||'Un plato se agotó.');ID_INTENTO=null;cargar()}
+      else if(r.data&&r.data.mensaje){aviso(r.data.mensaje);dibujarHoja()}
+      else{aviso('No se pudo enviar el pedido. Probá de nuevo.');dibujarHoja()}
+    }).catch(function(){
+      enviando=false;$('enviar').textContent='Enviar pedido';dibujarHoja();
+      aviso('No se pudo enviar. Revisá que estés conectado al wifi del local y probá de nuevo.');
+    });
+}
+
+/* ---------- seguimiento del pedido enviado ---------- */
+function guardado(){try{return JSON.parse(localStorage.getItem('vf_pedido'))}catch(e){return null}}
+function olvidar(){try{localStorage.removeItem('vf_pedido')}catch(e){}}
+function seguir(){clearInterval(timer);consultar();timer=setInterval(consultar,2500)}
+function consultar(){
+  var g=guardado();if(!g){clearInterval(timer);$('estado').classList.remove('on');return}
+  get('/api/pedidos/'+encodeURIComponent(g.id)).then(function(r){
+    errPoll=0;
+    if(r.status===404){terminar('Tu pedido ya no está activo.');return}
+    mostrar(r.data.pedido,g);
+  }).catch(function(){if(++errPoll>2&&$('estado').classList.contains('on')){var s=$('sin-red');if(s)s.style.display='block'}});
+}
+function terminar(msg){
+  clearInterval(timer);olvidar();
+  $('estado').innerHTML='<div class="e"><h2>'+esc(msg)+'</h2><button class="btn" onclick="$(\'estado\').classList.remove(\'on\');cargar()">Hacer otro pedido</button></div>';
+  $('estado').classList.add('on');
+}
+var ultimoEstado=null;
+function mostrar(p,g){
+  if(p.estado==='entregado'){terminar('¡Buen provecho!');return}
+  if(p.estado==='cancelado'){terminar('El pedido #'+p.num+' se canceló.');return}
+  var h='<div class="e'+(p.estado==='listo'?' listo':'')+'"><p>'+esc(etiquetaMesa(p.mesa))+' · tu número es</p><div class="num">#'+p.num+'</div>';
+  if(p.estado==='porcobrar'){
+    h+='<h2>Falta pagar</h2><div class="caja"><div class="monto">'+dinero(p.total)+'</div>';
+    if(g.pago==='QR'&&CFG.hayQrPago)h+='<img src="/qr-pago" alt="QR para pagar"><p>Escaneá el QR con tu app de pagos.</p>';
+    else if(g.pago==='QR')h+='<p>Pagá con QR en caja.</p>';
+    else h+='<p>Pasá por caja a pagar y decí tu número.</p>';
+    if(g.pago==='QR'&&CFG.aliasPago)h+='<p>o transferí al alias<br><span class="alias">'+esc(CFG.aliasPago)+'</span></p>';
+    h+='</div><p>Cuando caja confirme el pago, tu pedido pasa a cocina. Esta pantalla se actualiza sola.</p>';
+    h+='<button class="btn bad" onclick="cancelar()">Cancelar pedido</button>';
+  }else if(p.estado==='listo'){
+    h+='<h2>¡Tu pedido está listo!</h2><p>Pasá a retirarlo por el mostrador.</p>';
+    if(ultimoEstado!=='listo'&&navigator.vibrate)navigator.vibrate([300,150,300]);
+  }else{
+    h+='<h2>Lo estamos preparando</h2><p>Te avisamos acá cuando esté listo. No hace falta que cierres esta pantalla.</p>';
+  }
+  h+='<p id="sin-red" style="display:none;color:var(--bad);font-weight:700">Sin conexión con el local. Reintentando…</p></div>';
+  ultimoEstado=p.estado;
+  var e=$('estado');if(e.getAttribute('data-h')!==h){e.innerHTML=h;e.setAttribute('data-h',h)}
+  e.classList.add('on');
+}
+function cancelar(){
+  var g=guardado();if(!g||!confirm('¿Cancelar el pedido?'))return;
+  fetch('/api/pedidos/'+encodeURIComponent(g.id)+'/cancelar',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){return r.json()}).then(function(d){if(d.ok)terminar('Pedido cancelado.');else aviso(d.error||'No se pudo cancelar. Pedíselo a caja.')})
+    .catch(function(){aviso('No se pudo cancelar. Probá de nuevo.')});
+}
+
+cargar().then(function(){if(guardado())seguir()});
+</script>
+</body>
+</html>

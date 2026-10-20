@@ -1,0 +1,77 @@
+VITO FUD - SERVIDOR LOCAL (sin internet)
+
+REQUISITO: Node.js instalado (o un node.exe en esta misma carpeta).
+
+PRIMER ARRANQUE (en la PC del local)
+1. Doble clic en iniciar.bat. Queda una ventana negra abierta: no cerrarla.
+   Si el programa se cae por algún error, se reinicia solo.
+2. Se abre el navegador en Caja y pide elegir un PIN de 4 a 8 números.
+   No hay PIN por defecto: el programa no funciona para el personal hasta elegirlo.
+3. Después entrá a "QR para imprimir" (o a http://localhost:3000/inicio):
+   ahí están los QR de cada mesa y de "Para llevar", y los enlaces a todas las pantallas.
+   Imprimir y pegar un QR en cada mesa.
+
+PANTALLAS (todas se abren desde /inicio)
+   /pedir?mesa=N  Lo que ve el cliente al escanear el QR de la mesa N (mesa=llevar para llevar).
+   /caja          Cobrar pedidos, cerrar la jornada, ver ventas, marcar platos agotados, ajustes. (PIN)
+   /cocina        Tablero de la cocina. (PIN la primera vez en cada tablet)
+   /turnos        Pantalla para la TV del local: "Preparando" y "Listos para retirar".
+   /inicio        QR para imprimir y accesos.
+
+COMO FUNCIONA EL DIA
+   - El cliente escanea el QR, arma el pedido y recibe su número (#1, #2, ...).
+   - Paga con el QR de cobro del local (o en caja). Caja confirma mirando la cuenta
+     del local y toca "Cobrado": recién ahí el pedido pasa a cocina.
+     (En Ajustes se puede desactivar esta confirmación: el pedido va directo a cocina.)
+   - Cocina avanza el pedido: Empezar a preparar > Marcar listo > Entregado.
+   - La numeración NO se reinicia a medianoche: se reinicia al CERRAR LA JORNADA en Caja.
+     Cada pedido tiene además un identificador interno único (ej. J0007-042).
+     Si la jornada lleva más de 16 horas abierta, Caja muestra un aviso.
+   - Al cerrar la jornada se guarda el resumen en la carpeta datos\historial (un archivo por mes),
+     y desde Caja > "Jornada y ventas" se ve la facturación del mes por jornada y por plato.
+   - "Pausar pedidos" en Caja frena los pedidos nuevos (por ejemplo si la cocina se desbordó).
+
+CONFIGURAR EL LOCAL (Caja > Ajustes)
+   Nombre del local, cantidad de mesas, alias para transferencias, cambio de PIN.
+   QR DE COBRO: copiar la imagen del QR de la cuenta del local a la carpeta datos
+   con el nombre  qr-pago.png  (o qr-pago.jpg). Se muestra al cliente cuando va a pagar.
+   MENU, PRECIOS Y FOTOS (Caja > Menú): agregar, editar y borrar productos, cambiar precio,
+   descripción y categoría, cargar las opciones "sin..." (ej: Cebolla, Tomate) y subir la foto
+   desde la PC o el celular (se achica sola). "Marcar agotado" saca el plato de la carta al instante.
+   Los pedidos ya hechos conservan el precio con el que se pidieron.
+   Las fotos quedan en la carpeta imagenes con el nombre del plato. También se pueden copiar a mano
+   (png, jpg o webp, con el MISMO nombre del plato; no distingue mayúsculas ni tildes).
+
+EN EL LOCAL
+   - La primera vez Windows pide permiso de firewall: aceptar para "Redes privadas".
+   - Reservar una IP fija para la PC en el router. Si la dirección cambia, el programa lo avisa
+     en /inicio y hay que imprimir los QR de nuevo.
+   - Los celulares de los clientes tienen que estar en el wifi del local.
+   - Para instalar en una PC nueva: instalar.bat (clic derecho > Ejecutar como administrador).
+     Copia el programa a C:\VitoFud, abre el firewall, evita que la PC se duerma y deja el
+     arranque automático. Al actualizar no pisa datos ni imagenes.
+
+SEGURIDAD
+   - Caja, cocina, cobros, cierres y ajustes necesitan el PIN. Cinco PIN incorrectos seguidos
+     bloquean un minuto.
+   - El total de cada pedido lo calcula el servidor con los precios del menú.
+   - Cada celular puede tener como máximo 3 pedidos esperando pago.
+
+DONDE SE GUARDAN LOS DATOS (carpeta "datos")
+   menu.json, pedidos.json (jornada abierta), jornada.json, config.json (incluye el PIN, cifrado),
+   historial\AAAA-MM.json (jornadas cerradas) y backup\AAAA-MM-DD (copia diaria, últimas 14).
+   Para una copia de seguridad manual, copiar toda la carpeta datos.
+
+VERIFICAR QUE FUNCIONA (opcional)
+   node test.js     -> tienen que pasar las 89 pruebas.
+
+API
+   Públicas:  GET /api/menu, /api/config, /api/turnos, /api/pedidos/<id>, /api/red
+              POST /api/pedidos {id, items:[{n,q,nota}], pago, mesa}   (reenviar el mismo id NO duplica)
+              POST /api/pedidos/<id>/cancelar   (el cliente, solo si todavía no pagó)
+   Con PIN (encabezado X-Token, se obtiene con POST /api/login {pin}):
+              GET  /api/pedidos?activos=1
+              POST /api/pedidos/<id>/cobrar | /cancelar | /estado {estado: prep|listo|entregado}
+              GET  /api/jornada, /api/reporte?mes=AAAA-MM
+              POST /api/jornada/cerrar {forzar}, /api/pausa, /api/config, /api/pin, /api/menu/agotado
+              POST /api/menu/guardar {id?, n, cat, p, d, x:[...]}, /api/menu/borrar {id}, /api/menu/imagen {id, data}

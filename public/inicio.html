@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vito Fud — Inicio</title>
+<link rel="stylesheet" href="/base.css">
+<style>
+header{display:flex;align-items:center;gap:12px;padding:18px 26px;flex-wrap:wrap}
+header h1{font-size:28px;font-weight:800;letter-spacing:-.02em;flex:1}
+#tema{background:var(--panel2);width:40px;height:40px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line);font-size:18px}
+main{padding:0 26px 40px;max-width:1100px}
+.alerta{background:var(--warn);color:#1b1300;border-radius:14px;padding:16px 18px;font-weight:700;line-height:1.45;margin-bottom:18px;display:none}
+.alerta.on{display:block}.alerta button{margin-top:10px;background:#1b1300;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700}
+.bloque{background:var(--panel);border-radius:20px;padding:20px;margin-bottom:18px;box-shadow:inset 0 0 0 1px var(--line)}
+.bloque h2{font-size:20px;margin-bottom:6px}
+.bloque p{color:var(--muted);line-height:1.5;font-size:16px}
+.enlaces{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+.enlaces a{display:block;background:var(--panel2);border-radius:14px;padding:16px;text-decoration:none;color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.enlaces a b{display:block;font-size:19px;margin-bottom:4px}.enlaces a span{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.dir{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.dir select{max-width:420px}
+.qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;margin-top:16px}
+.qc{background:#fff;color:#111;border-radius:18px;padding:14px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.qc img{width:100%;display:block}
+.qc b{display:block;font-size:26px;margin-top:2px}.qc span{font-size:13px;color:#444;display:block}
+.barra{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+@media print{
+  body{background:#fff}header,.alerta,.noimp,.bloque:not(#bq){display:none!important}
+  main{padding:0;max-width:none}#bq{box-shadow:none;background:none;padding:0;margin:0}
+  .qrs{grid-template-columns:repeat(3,1fr);gap:10mm}.qc{box-shadow:inset 0 0 0 1px #999}
+}
+</style>
+</head>
+<body>
+<header><h1 id="local">Vito Fud</h1><button id="tema" aria-label="Cambiar tema" onclick="cambiarTema()">◐</button></header>
+<main>
+  <div class="alerta" id="alerta" role="alert"></div>
+  <div class="bloque noimp"><h2>Pantallas</h2><p>Abrí cada una en el dispositivo que corresponda. Caja y cocina piden el PIN la primera vez.</p><div class="enlaces" id="enlaces"></div></div>
+  <div class="bloque noimp"><h2>Dirección del local</h2><p>Los celulares de los clientes tienen que estar conectados al wifi del local. Los QR llevan esta dirección: <b id="dirt"></b></p>
+    <div class="dir" id="dirsel" hidden><label for="sel" style="font-weight:700">Si hay más de una, elegí la del wifi del local:</label><select id="sel" onchange="elegir(this.value)"></select></div>
+    <p style="margin-top:10px">Para que los QR impresos no dejen de funcionar, reservá esta dirección para la PC en el router (reserva DHCP o IP fija).</p></div>
+  <div class="bloque" id="bq"><h2 class="noimp">QR para las mesas</h2><p class="noimp">Imprimí y pegá uno en cada mesa. La cantidad de mesas se cambia en Caja, en Ajustes.</p>
+    <div class="barra noimp"><button class="btn" onclick="window.print()">Imprimir QR</button></div>
+    <div class="qrs" id="qrs"></div></div>
+</main>
+<script src="/comun.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var CFG={},RED={},base='';
+function get(u){return fetch(u,{cache:'no-store'}).then(function(r){return r.json()})}
+function elegir(u){try{localStorage.setItem('vf_base',u)}catch(e){}base=u;pintar()}
+function pintar(){
+  $('dirt').textContent=base;
+  var L=location.protocol+'//'+location.host;
+  $('enlaces').innerHTML=
+   '<a href="/caja"><b>Caja</b><span>Cobrar y cerrar la jornada · /caja</span></a>'+
+   '<a href="/cocina"><b>Cocina</b><span>Tablero de pedidos · /cocina</span></a>'+
+   '<a href="/turnos"><b>Pantalla de turnos</b><span>Para la TV del local · /turnos</span></a>'+
+   '<a href="/pedir?mesa=llevar"><b>Probar el pedido</b><span>Así lo ve el cliente · /pedir</span></a>';
+  var q='';
+  function tarjeta(t,sub){var u=base+'/pedir?mesa='+t;return'<div class="qc"><img src="/qr.svg?t='+encodeURIComponent(u)+'" alt="QR de '+esc(sub)+'"><b>'+esc(sub)+'</b><span>Escaneá para pedir</span></div>'}
+  for(var i=1;i<=CFG.mesas;i++)q+=tarjeta(i,'Mesa '+i);
+  q+=tarjeta('llevar','Para llevar');
+  $('qrs').innerHTML=q;
+}
+Promise.all([get('/api/config'),get('/api/red')]).then(function(r){
+  CFG=r[0];RED=r[1];$('local').textContent=CFG.local;document.title=CFG.local+' — Inicio';
+  var ds=RED.direcciones,pref=ds.filter(function(d){return d.preferida})[0]||ds[0];
+  var g=null;try{g=localStorage.getItem('vf_base')}catch(e){}
+  base=(g&&ds.some(function(d){return d.url===g}))?g:(pref?pref.url:location.protocol+'//'+location.host);
+  if(ds.length>1){$('dirsel').hidden=false;$('sel').innerHTML=ds.map(function(d){return'<option value="'+esc(d.url)+'"'+(d.url===base?' selected':'')+'>'+esc(d.url)+'  ('+esc(d.nombre)+')</option>'}).join('')}
+  if(RED.aviso){
+    var a=$('alerta');a.classList.add('on');
+    a.innerHTML='La dirección de la PC cambió de '+esc(RED.aviso.antes)+' a '+esc(RED.aviso.ahora)+'. Los QR que ya imprimiste dejaron de funcionar: imprimí los nuevos o reservá una IP fija en el router.<br><button onclick="entendido()">Entendido</button>';
+  }
+  pintar();
+});
+function entendido(){fetch('/api/red/ok',{method:'POST'}).then(function(){$('alerta').classList.remove('on')})}
+</script>
+</body>
+</html>

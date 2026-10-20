@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vito Fud — Cocina</title>
+<link rel="stylesheet" href="/base.css">
+<style>
+:root{--bg:#070b1c;--panel:#10162e;--line:rgba(255,255,255,.14);--text:#f2f4fb;--muted:#8d95b5;--accent:#ff7a3d;--ink:#1b0a02;--ok:#2ecc71;--bad:#e24b4a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px}
+header h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+#conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;padding:8px 16px;border-radius:99px;background:rgba(46,204,113,.15);color:var(--ok)}
+#conn i{width:12px;height:12px;border-radius:50%;background:currentColor}
+#conn.off{background:rgba(226,75,74,.2);color:var(--bad)}
+#cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 24px 24px;height:calc(100% - 70px)}
+section{background:var(--panel);border-radius:20px;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+section h2{font-size:20px;display:flex;justify-content:space-between}
+section h2 span{color:var(--accent)}
+.tk{background:rgba(255,255,255,.06);border-radius:16px;padding:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.tk.nuevo{animation:parp 1s infinite;box-shadow:inset 0 0 0 3px var(--accent)}
+@keyframes parp{50%{background:rgba(255,122,61,.22)}}
+.th{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.th b{font-size:36px;color:var(--accent)}.th span{color:var(--muted);font-size:16px}
+.ti{font-size:22px;padding:3px 0}.ti small{display:block;color:var(--accent);font-size:16px}
+.tp{color:var(--muted);font-size:15px;margin:8px 0}
+.tk button{width:100%;background:var(--accent);color:var(--ink);font-weight:800;font-size:20px;padding:18px;border-radius:14px}
+.tk button:disabled{opacity:.4}
+.tm{font-weight:800;font-size:18px;margin-bottom:6px}
+.vac{color:var(--muted);font-size:16px;text-align:center;padding:20px 0}
+#caido{position:fixed;inset:0;z-index:10;background:rgba(150,20,20,.96);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
+#caido.on{display:flex}
+#caido h2{font-size:clamp(34px,7vw,72px);font-weight:800}
+#caido p{font-size:clamp(18px,2.6vw,28px)}
+#sonido{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;background:var(--accent);color:var(--ink);font-weight:800;padding:12px 22px;border-radius:99px;display:none}
+#sonido.on{display:block}
+#toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#fff;color:#000;font-weight:700;padding:12px 22px;border-radius:99px;display:none;z-index:11}
+@media (max-width:760px){#cols{grid-template-columns:1fr;overflow-y:auto;height:auto}html,body{overflow:auto}}
+</style>
+</head>
+<body>
+<header><h1>Cocina</h1><div id="conn"><i></i><span>Conectado</span></div></header>
+<div id="cols"></div>
+<div id="caido"><h2>SIN CONEXIÓN</h2><p>No llega información del servidor. Reconectando solo…</p><p>Puede que estén entrando pedidos que todavía no ves. Revisá que la PC y el wifi estén prendidos.</p></div>
+<button id="sonido">🔔 Tocá acá para activar el sonido</button>
+<div id="toast"></div>
+<script src="/comun.js"></script>
+<script>
+document.documentElement.setAttribute('data-tema','oscuro');
+var $=function(i){return document.getElementById(i)};
+var ac=null, visto=null, lastOk=Date.now(), lastTick=Date.now(), skew=0, hayNuevos=false, ultimoPitido=0, busy=false;
+
+function activarSonido(){
+  if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  if(ac&&ac.state==='suspended')ac.resume();
+  $('sonido').classList.toggle('on',!ac);
+}
+document.addEventListener('click',activarSonido);document.addEventListener('touchstart',activarSonido);
+$('sonido').classList.add('on');
+
+function pitar(grave){
+  if(!ac)return;
+  try{
+    var o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='sine';o.frequency.value=grave?330:880;g.gain.value=.3;
+    o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);o.stop(ac.currentTime+.5);
+  }catch(e){}
+}
+
+function pedir(url,opts,ms){
+  var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||4000);
+  opts=opts||{};opts.signal=c.signal;opts.headers=Object.assign({'X-Token':VF.token()},opts.headers||{});
+  return fetch(url,opts).then(function(r){clearTimeout(t);return r},function(e){clearTimeout(t);throw e});
+}
+function toast(m){var t=$('toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none'},2500)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+function dibujar(d){
+  var l=d.pedidos;
+  function col(e,t,b,sig){
+    var ps=l.filter(function(p){return p.estado===e});
+    var h='<section><h2>'+t+' <span>'+ps.length+'</span></h2>';
+    if(!ps.length)h+='<div class="vac">Sin pedidos</div>';
+    ps.forEach(function(p){
+      var min=Math.max(0,Math.floor((Date.now()+skew-p.ts)/60000));
+      h+='<article class="tk '+e+'"><div class="th"><b>#'+p.num+'</b><span>hace '+min+' min</span></div><div class="tm">'+esc(etiquetaMesa(p.mesa))+'</div>';
+      p.items.forEach(function(i){h+='<div class="ti"><b>'+i.q+'×</b> '+esc(i.n)+(i.nota?'<small>'+esc(i.nota)+'</small>':'')+'</div>'});
+      h+='<div class="tp">'+esc(p.pago)+'</div><button onclick="avanzar(this,\''+esc(p.id)+'\',\''+sig+'\')">'+b+'</button></article>';
+    });
+    return h+'</section>';
+  }
+  $('cols').innerHTML=col('nuevo','Nuevos','Empezar a preparar','prep')+col('prep','Preparando','Marcar listo','listo')+col('listo','Listos','Entregado','entregado');
+}
+
+function poll(){
+  return pedir('/api/pedidos?activos=1').then(function(r){if(r.status===401){lastOk=Date.now();VF.login();throw new Error('pin')}return r.json()}).then(function(d){
+    lastOk=Date.now();skew=d.ahora-Date.now();
+    var ids={},nuevoLlego=false;
+    d.pedidos.forEach(function(p){ids[p.id]=1;if(visto&&!visto[p.id]&&p.estado==='nuevo')nuevoLlego=true});
+    visto=visto||{};d.pedidos.forEach(function(p){visto[p.id]=1});
+    hayNuevos=d.pedidos.some(function(p){return p.estado==='nuevo'});
+    if(nuevoLlego){pitar();ultimoPitido=Date.now()}
+    dibujar(d);
+  }).catch(function(){});
+}
+function avanzar(btn,id,sig){
+  btn.disabled=true;
+  pedir('/api/pedidos/'+encodeURIComponent(id)+'/estado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado:sig})})
+    .then(function(r){if(r.status===401){VF.login();return}if(!r.ok&&r.status!==409)throw new Error('x')})
+    .catch(function(){toast('No se pudo guardar. Probá de nuevo.')})
+    .then(poll);
+}
+
+function estadoConexion(){
+  var caido=Date.now()-lastOk>6000;
+  $('caido').classList.toggle('on',caido);
+  $('conn').className=caido?'off':'';
+  $('conn').lastChild.textContent=caido?'Sin conexión':'Conectado';
+  if(caido&&Date.now()-ultimoPitido>4000){pitar(true);ultimoPitido=Date.now()}
+  else if(hayNuevos&&Date.now()-ultimoPitido>15000){pitar();ultimoPitido=Date.now()}
+}
+
+function bucle(){
+  lastTick=Date.now();
+  if(busy)return;
+  busy=true;
+  poll().then(function(){busy=false;estadoConexion();setTimeout(bucle,2000)});
+}
+/* vigilante: si el bucle se llegara a trabar, lo reinicia solo */
+setInterval(function(){if(Date.now()-lastTick>15000){busy=false;bucle()}estadoConexion()},1000);
+bucle();
+/* que la pantalla no se apague */
+function pantalla(){try{if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(function(){})}catch(e){}}
+pantalla();document.addEventListener('visibilitychange',function(){if(!document.hidden)pantalla()});
+</script>
+</body>
+</html>
